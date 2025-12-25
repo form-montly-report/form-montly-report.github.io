@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Form</title>
+
+        <style>
+            @page {
+                size: A4;
+                margin: 20mm;
+            }
+
+            :root {
+                --sheet-pad: 20mm;
+                --base-font: 14px;
+
+                --box-h: 34px;
+                --box-px: 10px;
+                --box-b: 1px solid #1f1f1f;
+
+                --amount-w: 160px;
+
+                --name-date-gap: 8px;
+                --inside-gap: 10px;
+
+                --currency-w: 10px;
+                --cal-btn-w: 34px;
+
+                --sig-h: 115px;
+                --sig-pad-inset: 0px;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    Segoe UI,
+                    Roboto,
+                    Arial,
+                    sans-serif;
+                font-size: var(--base-font);
+                color: #111;
+                background: #e9e9e9;
+            }
+
+            .wrap {
+                padding: 18px;
+                display: flex;
+                justify-content: center;
+            }
+
+            .sheet {
+                width: 210mm;
+                min-height: 297mm;
+                background: #fff;
+                padding: var(--sheet-pad);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+                position: relative;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* Buttons bottom-right */
+            .btnbar {
+                position: absolute;
+                right: 14px;
+                bottom: 14px;
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                z-index: 5;
+            }
+
+            .btn {
+                height: 32px;
+                padding: 0 12px;
+                border: 1px solid #111;
+                background: #fff;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: var(--base-font);
+                line-height: 30px;
+            }
+
+            .titles {
+                text-align: center;
+                margin-top: 2px;
+                margin-bottom: 10px;
+                flex: 0 0 auto;
+            }
+            .title1 {
+                font-size: 16px;
+                font-weight: 500;
+                margin: 0;
+            }
+            .title2 {
+                font-size: 20px;
+                font-weight: 700;
+                margin: 6px 0 0 0;
+            }
+
+            .field {
+                display: flex;
+                align-items: center;
+                gap: var(--inside-gap);
+                min-width: 0;
+            }
+
+            .field-label {
+                text-align: left;
+                font-weight: 600;
+                white-space: nowrap;
+                font-size: var(--base-font);
+                flex: 0 0 auto;
+            }
+
+            .box {
+                height: var(--box-h);
+                border: var(--box-b);
+                background: #fff;
+                padding: 0 var(--box-px);
+                font: inherit;
+                font-size: var(--base-font);
+                color: inherit;
+                line-height: calc(var(--box-h) - 2px);
+                border-radius: 0;
+            }
+
+            input.box {
+                appearance: none;
+                -webkit-appearance: none;
+                outline: none;
+                display: block;
+            }
+
+            select.box {
+                outline: none;
+                display: block;
+                line-height: normal;
+                padding-top: 0;
+                padding-bottom: 0;
+            }
+
+            /* Below Monthly Report */
+            .top-fields {
+                margin-top: 8px;
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+                gap: var(--name-date-gap);
+                width: 100%;
+                flex: 0 0 auto;
+            }
+
+            .church-field {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+            .church-input {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .month-wrap {
+                width: var(--amount-w);
+                flex: 0 0 var(--amount-w);
+                height: var(--box-h);
+                position: relative;
+            }
+            .month-select {
+                width: 100%;
+            }
+
+            .rows {
+                display: grid;
+                gap: 6px;
+                margin-top: 4px;
+                flex: 0 0 auto;
+            }
+
+            .row {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                width: 100%;
+            }
+
+            .label {
+                font-weight: 600;
+                white-space: nowrap;
+                font-size: var(--base-font);
+            }
+
+            #items .label,
+            .total-row .label {
+                flex: 0 0 auto;
+                width: auto;
+                text-align: left;
+            }
+
+            .guide-line {
+                flex: 1;
+                border-bottom: 1px solid #111;
+                opacity: 0.35;
+                margin: 0 6px;
+            }
+
+            .money {
+                width: var(--amount-w);
+                flex: 0 0 var(--amount-w);
+                position: relative;
+                height: var(--box-h);
+            }
+
+            .money .currency {
+                position: absolute;
+                left: var(--box-px);
+                top: 0;
+                height: var(--box-h);
+                line-height: calc(var(--box-h) - 2px);
+                width: var(--currency-w);
+                font-weight: 600;
+                pointer-events: none;
+            }
+
+            .money .money-input,
+            .money .money-total {
+                width: 100%;
+                padding-left: calc(var(--box-px) + var(--currency-w));
+            }
+
+            .item-row .money,
+            .total-row .money {
+                margin-left: auto;
+            }
+
+            .money-total {
+                display: flex;
+                align-items: center;
+            }
+
+            /* ✅ Name/Date now uses the SAME layout style as Church/Month */
+            .name-date {
+                margin-top: 12px;
+                display: flex;
+                align-items: center;
+                gap: var(--name-date-gap);
+                width: 100%;
+                flex: 0 0 auto;
+            }
+
+            .name-field {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+            .name-input {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .date-wrap {
+                width: var(--amount-w);
+                flex: 0 0 var(--amount-w);
+                position: relative;
+                height: var(--box-h);
+            }
+            .date-input {
+                width: 100%;
+                padding-right: var(--cal-btn-w);
+            }
+
+            .date-btn {
+                position: absolute;
+                top: 1px;
+                right: 1px;
+                width: calc(var(--cal-btn-w) - 2px);
+                height: calc(var(--box-h) - 2px);
+                border: 0;
+                background: transparent;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+            }
+            .date-btn:focus {
+                outline: 2px solid #111;
+                outline-offset: 2px;
+            }
+            .date-btn svg {
+                width: 18px;
+                height: 18px;
+                display: block;
+            }
+
+            .native-date {
+                position: absolute;
+                top: 1px;
+                right: 1px;
+                width: 1px;
+                height: 1px;
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .signature {
+                margin-top: auto;
+                padding-top: 10px;
+                flex: 0 0 auto;
+            }
+
+            .sig-pad {
+                position: relative;
+                width: 100%;
+                height: var(--sig-h);
+            }
+
+            .sig-boundary {
+                position: absolute;
+                inset: var(--sig-pad-inset);
+                border: 1px solid #111;
+                pointer-events: none;
+            }
+
+            .sig-canvas {
+                position: absolute;
+                inset: var(--sig-pad-inset);
+                width: calc(100% - (var(--sig-pad-inset) * 2));
+                height: calc(100% - (var(--sig-pad-inset) * 2));
+                touch-action: none;
+            }
+
+            .sig-text {
+                margin-top: 6px;
+                font-weight: 600;
+                font-size: var(--base-font);
+            }
+
+            @media print {
+                body {
+                    background: #fff;
+                }
+                .wrap {
+                    padding: 0;
+                }
+                .sheet {
+                    width: calc(210mm - 40mm);
+                    min-height: calc(297mm - 40mm);
+                    padding: 0;
+                    box-shadow: none;
+                    background: transparent;
+                }
+                .btnbar {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="wrap">
+            <div class="sheet">
+                <div class="btnbar">
+                    <button class="btn" id="clearSig" type="button">
+                        Clear Signature
+                    </button>
+                    <button class="btn" type="button" onclick="window.print()">
+                        Export PDF
+                    </button>
+                </div>
+
+                <div class="titles">
+                    <p class="title1">
+                        Sevent Day Adventist Church Reform Movement
+                    </p>
+                    <p class="title2">Monthly Report</p>
+                </div>
+
+                <div class="top-fields">
+                    <div class="field church-field">
+                        <div class="field-label">Church Name:</div>
+                        <input class="box church-input" type="text" />
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">Month:</div>
+                        <div class="month-wrap">
+                            <select class="box month-select" aria-label="Month">
+                                <option value="">Select month</option>
+                                <option>January</option>
+                                <option>February</option>
+                                <option>March</option>
+                                <option>April</option>
+                                <option>May</option>
+                                <option>June</option>
+                                <option>July</option>
+                                <option>August</option>
+                                <option>September</option>
+                                <option>October</option>
+                                <option>November</option>
+                                <option>December</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rows" id="items">
+                    <div class="row item-row">
+                        <div class="label">Tithes</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+                    <div class="row item-row">
+                        <div class="label">Firstfruits</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+                    <div class="row item-row">
+                        <div class="label">Second Tithe</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+                    <div class="row item-row">
+                        <div class="label">Sabbath School Offering</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="row item-row">
+                        <div class="label">Church Buildings</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+                    <div class="row item-row">
+                        <div class="label">Schools</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="row item-row">
+                        <div class="label">Foreign Missions</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+                    <div class="row item-row">
+                        <div class="label">Evangelism Department</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="row item-row">
+                        <div class="label">Publications Department</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+                    <div class="row item-row">
+                        <div class="label">Multimedia Department</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="row item-row">
+                        <div class="label">Health Department</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+                    <div class="row item-row">
+                        <div class="label">Family Department</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+                    <div class="row item-row">
+                        <div class="label">Good Samaritan Department</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="row item-row">
+                        <div class="label">Youth Department</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+                    <div class="row item-row">
+                        <div class="label">Music Department</div>
+                        <div class="guide-line"></div>
+                        <div class="money">
+                            <span class="currency">$</span
+                            ><input
+                                class="box money-input"
+                                type="text"
+                                inputmode="decimal"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row total-row" style="margin-top: 10px">
+                    <div class="label">Total:</div>
+                    <div class="guide-line"></div>
+                    <div class="money" aria-live="polite">
+                        <span class="currency">$</span>
+                        <div id="totalBox" class="box money-total">0.00</div>
+                    </div>
+                </div>
+
+                <div class="name-date">
+                    <div class="field name-field">
+                        <div class="field-label">Name:</div>
+                        <input class="box name-input" type="text" />
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">Date of sending:</div>
+                        <div class="date-wrap">
+                            <input
+                                id="dateText"
+                                class="box date-input"
+                                type="text"
+                                placeholder="MM/DD/YYYY"
+                            />
+                            <button
+                                class="date-btn"
+                                type="button"
+                                aria-label="Open calendar"
+                                id="openCalendar"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <rect
+                                        x="3"
+                                        y="4"
+                                        width="18"
+                                        height="18"
+                                        rx="2"
+                                        ry="2"
+                                    ></rect>
+                                    <line
+                                        x1="16"
+                                        y1="2.5"
+                                        x2="16"
+                                        y2="6"
+                                    ></line>
+                                    <line x1="8" y1="2.5" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                            </button>
+                            <input
+                                id="dateNative"
+                                class="native-date"
+                                type="date"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="signature">
+                    <div class="sig-pad">
+                        <div class="sig-boundary" aria-hidden="true"></div>
+                        <canvas id="sigCanvas" class="sig-canvas"></canvas>
+                    </div>
+                    <div class="sig-text">Signature</div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            (function () {
+                const inputs = Array.from(
+                    document.querySelectorAll(".money-input"),
+                );
+                const totalBox = document.getElementById("totalBox");
+
+                function toNumber(raw) {
+                    if (!raw) return 0;
+                    let s = String(raw)
+                        .replace(/,/g, ".")
+                        .replace(/[^\d.\-]/g, "");
+                    s = s.replace(/(?!^)-/g, "");
+                    const firstDot = s.indexOf(".");
+                    if (firstDot !== -1)
+                        s =
+                            s.slice(0, firstDot + 1) +
+                            s.slice(firstDot + 1).replace(/\./g, "");
+                    const n = parseFloat(s);
+                    return Number.isFinite(n) ? n : 0;
+                }
+
+                function updateTotal() {
+                    const sum = inputs.reduce(
+                        (acc, el) => acc + toNumber(el.value),
+                        0,
+                    );
+                    totalBox.textContent = sum.toFixed(2);
+                }
+
+                inputs.forEach((el) =>
+                    el.addEventListener("input", updateTotal),
+                );
+                updateTotal();
+            })();
+
+            (function () {
+                const btn = document.getElementById("openCalendar");
+                const dateText = document.getElementById("dateText");
+                const dateNative = document.getElementById("dateNative");
+
+                function toMMDDYYYY(iso) {
+                    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+                    if (!m) return "";
+                    return `${m[2]}/${m[3]}/${m[1]}`;
+                }
+
+                btn.addEventListener("click", () => {
+                    if (typeof dateNative.showPicker === "function") {
+                        dateNative.showPicker();
+                        return;
+                    }
+                    const prev = dateNative.style.pointerEvents;
+                    dateNative.style.pointerEvents = "auto";
+                    dateNative.focus({ preventScroll: true });
+                    dateNative.click();
+                    dateNative.style.pointerEvents = prev;
+                });
+
+                dateNative.addEventListener("change", () => {
+                    const formatted = toMMDDYYYY(dateNative.value);
+                    if (formatted) dateText.value = formatted;
+                });
+            })();
+
+            (function () {
+                const canvas = document.getElementById("sigCanvas");
+                const ctx = canvas.getContext("2d", {
+                    willReadFrequently: false,
+                });
+                const clearBtn = document.getElementById("clearSig");
+
+                let drawing = false;
+                let last = null;
+
+                function resizeCanvasPreserve() {
+                    const rect = canvas.getBoundingClientRect();
+                    const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+                    const prev = document.createElement("canvas");
+                    prev.width = canvas.width;
+                    prev.height = canvas.height;
+                    const pctx = prev.getContext("2d");
+                    pctx.drawImage(canvas, 0, 0);
+
+                    canvas.width = Math.round(rect.width * dpr);
+                    canvas.height = Math.round(rect.height * dpr);
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+                    ctx.lineCap = "round";
+                    ctx.lineJoin = "round";
+                    ctx.strokeStyle = "#000";
+                    ctx.globalAlpha = 0.92;
+
+                    if (prev.width && prev.height) {
+                        ctx.drawImage(
+                            prev,
+                            0,
+                            0,
+                            prev.width,
+                            prev.height,
+                            0,
+                            0,
+                            rect.width,
+                            rect.height,
+                        );
+                    }
+                }
+
+                function clearSignature() {
+                    ctx.save();
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.restore();
+                }
+
+                function getPos(e) {
+                    const r = canvas.getBoundingClientRect();
+                    return { x: e.clientX - r.left, y: e.clientY - r.top };
+                }
+
+                function start(e) {
+                    drawing = true;
+                    last = getPos(e);
+                    canvas.setPointerCapture?.(e.pointerId);
+                }
+
+                function move(e) {
+                    if (!drawing) return;
+                    const p = getPos(e);
+                    const pressure =
+                        typeof e.pressure === "number" && e.pressure > 0
+                            ? e.pressure
+                            : 0.5;
+                    const base = 2.2;
+                    ctx.lineWidth = base * (0.6 + pressure);
+
+                    ctx.beginPath();
+                    ctx.moveTo(last.x, last.y);
+                    ctx.lineTo(p.x, p.y);
+                    ctx.stroke();
+
+                    last = p;
+                }
+
+                function end() {
+                    drawing = false;
+                    last = null;
+                }
+
+                clearBtn.addEventListener("click", clearSignature);
+
+                resizeCanvasPreserve();
+                window.addEventListener("resize", resizeCanvasPreserve);
+
+                canvas.addEventListener("pointerdown", start);
+                canvas.addEventListener("pointermove", move);
+                canvas.addEventListener("pointerup", end);
+                canvas.addEventListener("pointercancel", end);
+                canvas.addEventListener("pointerleave", end);
+            })();
+        </script>
+    </body>
+</html>
